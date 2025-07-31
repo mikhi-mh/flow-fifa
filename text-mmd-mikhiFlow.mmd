@@ -1,0 +1,60 @@
+---
+config:
+  layout: fixed
+  theme: neo-dark
+  look: neo
+---
+flowchart TD
+ subgraph s1["cURL"]
+        n7["<b>POST endpoint</b><br><br><code>inputs for cURL</code>"]
+        sid["**spreadsheetId**<br>🔹 Unique ID of your Google Sheet<br>🔸 Example: <code>1Xz3ABC456DEFG_HijklMNopqrstuVWXYZ12345678</code><br>🔹 Found in URL after <code>/d/</code>"]
+        range["**range**<br>🔹 Sheet name and cell range<br>🔸 Example: <code>Sheet1!A1:D1</code>"]
+        inputOption["**valueInputOption**<br>🔹 Data interpretation mode<br>🔸 <code>USER_ENTERED</code> (formulas, formats)<br>🔸 <code>RAW</code> (as-is)"]
+        auth["**Authorization (Access Token)**<br>🔹 OAuth 2.0 Bearer token<br>🔸 Scope: <code>https://www.googleapis.com/auth/spreadsheets</code>"]
+        method["**HTTP Method**<br>🔹<code>POST</code>"]
+        headers["**Request Headers**<br>🔹 <code>Authorization: Bearer &lt;ACCESS_TOKEN&gt;</code><br>🔹 <code>Content-Type: application/json</code>"]
+        body@{ label: "**Request Body**<br>🔹 JSON structure<br>🔸 Example:<br><code>{<br>&nbsp;&nbsp;\"values\": [<br>&nbsp;&nbsp;&nbsp;&nbsp;[\"1930\", \"Uruguay\", \"4–2\", \"Argentina\"]<br>&nbsp;&nbsp;]<br>}</code>" }
+        endpoint["**API Endpoint**<br><code>spreadsheet-v4-endpoint</code>"]
+  end
+    n7 --> sid
+    sid --> range
+    range --> inputOption
+    inputOption --> auth
+    auth --> method
+    method --> headers
+    headers --> body
+    body --> endpoint
+    A1@{ label: "**Open page**<br>Input: Wikipedia page Link 'List of FIFA World Cup finals'<br>Output: Table is loaded (HTML view)" } --> A2{{"**Loop Condition**<br>i = 1 to 10"}}
+    A2 --> A3["**ExtractHTML**<br>Inputs / DOM paths:<br>
+  - Year: <code>//*[@id=mw-content-text]/div[1]/table[1]/tbody/tr[i]/td[1]</code><br>
+  - Winner: <code>//*[@id=mw-content-text]/div[1]/table[1]/tbody/tr[i]/td[2]</code><br>
+  - Score: <code>//*[@id=mw-content-text]/div[1]/table[1]/tbody/tr[i]/td[3]</code><br>
+  - Runners-up: <code>//*[@id=mw-content-text]/div[1]/table[1]/tbody/tr[i]/td[4]</code><br>
+  Output: Text values for Year, Winner, Score, Runners-up"]
+    A3 --> A4@{ label: "**Append Row**<br>Input: Values from ExtractHTML step<br>Output: JSON row appended to output array<br>\n    (e.g. <code>[\"1930\", \"Uruguay\", \"4–2\", \"Argentina\"]</code>)" }
+    A4 --> A2 & n6["postman call"]
+    A2 -. After 10 iterations .-> A5["**Call API**<br>Input:<br>
+  - URL: cURL To Google Spread Sheet<br>
+  - Method: POST<br>
+  - Headers: Authorization: Bearer <br>
+  - Body: <code>{<br> values: [ [ ... rows... ] ]<br>}</code><br>
+  Output: Data successfully appended to Google Sheet &amp; once done extract the google sheet"]
+    A5 --> n5["URL"] & n6 & n7
+    n3["wiki page"] --> A1 & n4["Link"]
+    n6 --> n2["final Google Sheet"]
+    n7@{ shape: rect}
+    body@{ shape: rect}
+    A1@{ shape: rect}
+    A3@{ shape: rect}
+    A4@{ shape: rect}
+    n6@{ img: "https://www.svgrepo.com/show/354202/postman-icon.svg", h: 60, w: 60, pos: "b", constraint: "on"}
+    A5@{ shape: rect}
+    n5@{ shape: text}
+    n3@{ icon: "azure:web-application-firewall-policieswaf", pos: "t"}
+    n4@{ shape: text}
+    n2@{ icon: "aws:res-data-table", pos: "t"}
+    style A1 color:#FFFFFF
+    style n2 stroke:#00C853
+    click endpoint "https://sheets.googleapis.com/v4/spreadsheets/{spreadsheetId}/values/{range}:append?valueInputOption=USER_ENTERED"
+    click n5 "https://sheets.googleapis.com/v4/spreadsheets/{spreadsheetId}/values/{range}:append?valueInputOption=USER_ENTERED"
+    click n4 "https://en.wikipedia.org/wiki/List_of_FIFA_World_Cup_finals"
